@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ziki — Your App</title>
+  <script src="https://www.gstatic.com/antigravity/web/dev/tailwindcss.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      font-family: system-ui, -apple-system, sans-serif;
+      background: #080d1a;
+      color: #e2e8f0;
+      width: 100%; height: 100%;
+      display: flex; flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* ── Nav ── */
+    .nv { background:#0b1020; border-bottom:1px solid #1a2540; display:flex; align-items:center; justify-content:space-between; padding:0 16px; height:44px; flex-shrink:0; }
+    .nt { display:inline-flex; align-items:center; gap:5px; padding:4px 10px; border-radius:6px; font-size:12px; font-weight:500; color:#6b7fa0; cursor:pointer; white-space:nowrap; }
+    .nt.on { color:#e2eeff; background:#182d52; }
+    .nt svg { width:13px; height:13px; }
+
+    /* ── Tab bar ── */
+    .tb { display:flex; align-items:flex-end; border-bottom:1px solid #1a2540; flex-shrink:0; background:#090e1d; position:relative; justify-content:center; }
+    .ti { display:flex; flex-direction:column; align-items:center; padding:12px 30px 0; cursor:pointer; font-size:13px; font-weight:500; color:#4b5c78; transition:color .15s; }
+    .ti.on { color:#e2eeff; }
+    .tu { height:2.5px; border-radius:2px; width:100%; margin-top:10px; background:transparent; }
+    .ti.on .tu { background:#3b82f6; }
+
+    /* ── Main ── */
+    main { flex:1; overflow-y:auto; padding:14px 20px; background:#080d1a; }
+
+    /* ── Table ── */
+    .it { width:100%; border-collapse:collapse; }
+    .it th { font-size:11px; font-weight:500; color:#4b5c78; padding:8px 12px; text-align:left; border-bottom:1px solid #1a2540; }
+    .ir { border-bottom:1px solid #141e30; cursor:pointer; transition:background .1s; }
+    .ir:hover { background:#111e32; }
+    .ir td { padding:10px 12px; vertical-align:middle; }
+    .sp { display:inline-flex; align-items:center; justify-content:center; background:#172340; color:#3b82f6; font-size:11px; font-weight:700; border-radius:6px; padding:3px 8px; min-width:36px; }
+    .ab { display:inline-flex; align-items:center; gap:4px; background:#166534; color:#4ade80; border:1px solid #166534; border-radius:6px; font-size:11px; font-weight:600; padding:4px 12px; cursor:pointer; white-space:nowrap; }
+    .ab:hover { background:#15803d; }
+    .tp { display:inline-flex; align-items:center; background:#162040; color:#6b90c4; border:1px solid #1e3060; border-radius:5px; font-size:11px; font-weight:500; padding:2px 8px; }
+    .fc { display:inline-flex; align-items:center; gap:4px; font-size:11px; font-weight:500; padding:2px 8px; border-radius:4px; cursor:pointer; }
+    .cb { background:#162040; color:#6b90c4; border:1px solid #1e3060; }
+    .cs { background:#1a2030; color:#6b7fa0; border:1px solid #232e42; }
+
+    /* ── Agent bar ── */
+    .agbar { background:#090d1a; border-top:1px solid #1a2540; display:flex; align-items:center; padding:0 14px; height:58px; flex-shrink:0; gap:2px; overflow-x:auto; }
+    .ac { display:flex; align-items:center; gap:7px; padding:5px 10px; border-radius:8px; cursor:pointer; transition:background .15s; }
+    .ac:hover { background:#111e32; }
+    .av { width:32px; height:32px; border-radius:50%; border:1.5px solid #1e2a3e; display:flex; align-items:center; justify-content:center; font-size:16px; background:#0d1525; flex-shrink:0; }
+    .av.gr { filter:grayscale(1) brightness(.5); }
+    .as { width:1px; height:32px; background:#1a2540; margin:0 2px; flex-shrink:0; }
+
+    /* ── Buttons ── */
+    .bi { width:28px; height:28px; background:#101c34; border:1px solid #1e3060; border-radius:6px; display:flex; align-items:center; justify-content:center; cursor:pointer; color:#4b5c78; }
+    .ba { display:inline-flex; align-items:center; gap:5px; background:#101c34; color:#7aadee; border:1px solid #1e3060; border-radius:7px; font-size:12px; font-weight:600; padding:5px 12px; cursor:pointer; }
+    .ua { width:28px; height:28px; border-radius:50%; background:linear-gradient(135deg,#22c55e,#16a34a); display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:800; color:white; }
+    .nb { position:relative; display:inline-flex; }
+    .nb .nd { position:absolute; top:-4px; right:-5px; background:#ef4444; color:white; font-size:9px; font-weight:800; border-radius:99px; padding:1px 4px; min-width:15px; text-align:center; border:1.5px solid #0b1020; }
+    .zc { display:inline-flex; align-items:center; gap:5px; background:#101c34; border:1px solid #1e3060; border-radius:6px; font-size:12px; font-weight:600; padding:3px 9px; color:#6b90c4; cursor:pointer; }
+
+    /* ════════════════════════════════════════
+       ROBO PETE — no container, free roaming
+    ════════════════════════════════════════ */
+
+    /* The robot wrapper — lives at the bottom-right corner.
+       We use absolute (to body) not fixed so it always works in iframes. */
+    #pete {
+      position: absolute;
+      /* positioned by JS below */
+      bottom: 68px;   /* above agent bar */
+      right: 0;
+      width: 60px;
+      z-index: 9999;
+      pointer-events: auto;
+      cursor: pointer;
+      /* start fully hidden off-screen */
+      transform: translateX(64px);
+      transition: transform 0.7s cubic-bezier(0.34, 1.2, 0.64, 1);
+      /* no background, no border, no card */
+    }
+
+    /* Speech bubble — hangs to the LEFT of the robot */
+    #pete-bubble {
+      position: absolute;
+      bottom: 72px;      /* above robot head */
+      right: 0;          /* aligned to robot's right edge */
+      width: 200px;
+      transform-origin: bottom right;
+
+      background: #fff;
+      color: #1e293b;
+      font-size: 12px;
+      font-weight: 600;
+      line-height: 1.5;
+      padding: 9px 12px;
+      border-radius: 12px 12px 4px 12px;
+      box-shadow: 0 6px 28px rgba(0,0,0,.55), 0 0 0 1.5px rgba(148,163,184,.3);
+      white-space: pre-line;
+
+      opacity: 0;
+      transform: scale(.45) translateY(8px);
+      transition: opacity .22s ease, transform .25s cubic-bezier(0.34,1.56,0.64,1);
+      pointer-events: none;
+    }
+    /* Comic tail */
+    #pete-bubble::after {
+      content: '';
+      position: absolute;
+      bottom: -9px; right: 16px;
+      border-left: 8px solid transparent;
+      border-top: 10px solid #fff;
+    }
+    #pete-bubble.show {
+      opacity: 1;
+      transform: scale(1) translateY(0);
+    }
+
+    /* Robot animations */
+    @keyframes pb  { 0%,90%,100%{transform:scaleY(1)} 94%{transform:scaleY(.07)} }
+    @keyframes ap  { 0%,100%{opacity:1} 50%{opacity:.18} }
+    @keyframes bl  { 0%,100%{opacity:1} 50%{opacity:.12} }
+    @keyframes br  { 0%,100%{opacity:1} 50%{opacity:.12} }
+    @keyframes bob { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-4px)} }
+    @keyframes wl  { 0%,100%{transform:rotate(0deg) translateY(0)} 25%{transform:rotate(-22deg) translateY(-3px)} 75%{transform:rotate(22deg) translateY(0)} }
+    @keyframes wr  { 0%,100%{transform:rotate(0deg) translateY(0)} 25%{transform:rotate(22deg) translateY(0)} 75%{transform:rotate(-22deg) translateY(-3px)} }
+    @keyframes shk { 0%,100%{transform:translateX(0)} 15%{transform:translateX(-5px) rotate(-4deg)} 30%{transform:translateX(5px) rotate(4deg)} 45%{transform:translateX(-3px)} 60%{transform:translateX(3px)} 75%{transform:translateX(-2px)} }
+
+    #p-el,#p-er { transform-origin:center; animation:pb 5s ease-in-out infinite; }
+    #p-er { animation-delay:.12s; }
+    #p-ant { animation:ap 1.9s ease-in-out infinite; }
+    #p-bl  { animation:bl 1.3s ease-in-out infinite; }
+    #p-br  { animation:br 1.3s ease-in-out infinite .65s; }
+    #p-ll  { transform-origin:18px 59px; }
+    #p-lr  { transform-origin:38px 59px; }
+  </style>
+</head>
+<body style="position:relative;">
+
+<!-- TOP NAV -->
+<nav class="nv">
+  <div style="display:flex;align-items:center;gap:12px;">
+    <svg width="30" height="30" viewBox="0 0 32 32" fill="none">
+      <rect width="32" height="32" rx="7" fill="#0f1e3d"/>
+      <path d="M7 10h13l-9 12h10" stroke="#4a9eff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    <div class="zc">
+      <div style="width:16px;height:16px;border-radius:4px;background:#1e3060;color:#60a5fa;font-size:10px;font-weight:800;display:flex;align-items:center;justify-content:center;">Z</div>
+      <span>Zedu</span>
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
+    </div>
+    <div style="width:1px;height:18px;background:#1a2540;"></div>
+    <div style="display:flex;gap:2px;">
+      <div class="nt on">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v3M12 20v3M4.22 4.22l2.12 2.12M17.66 17.66l2.12 2.12M1 12h3M20 12h3M4.22 19.78l2.12-2.12M17.66 6.34l2.12-2.12"/></svg>
+        Your App
+      </div>
+      <div class="nt" onclick="this.parentNode.querySelectorAll('.nt').forEach(n=>n.classList.remove('on'));this.classList.add('on')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+        Marketing
+      </div>
+      <div class="nt" onclick="this.parentNode.querySelectorAll('.nt').forEach(n=>n.classList.remove('on'));this.classList.add('on')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8v4M12 16h.01"/></svg>
+        Security
+      </div>
+    </div>
+  </div>
+  <div style="display:flex;align-items:center;gap:10px;">
+    <div style="display:flex;align-items:center;gap:7px;background:#101c34;border:1px solid #1e3060;border-radius:8px;padding:3px 10px 3px 5px;cursor:pointer;">
+      <div class="ua">S</div>
+      <span style="font-size:12px;font-weight:600;color:#c8d6ee;">Solomon Ogah</span>
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#4b5c78" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
+    </div>
+    <div class="nb">
+      <button class="bi"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0"/></svg></button>
+      <div class="nd">37</div>
+    </div>
+  </div>
+</nav>
+
+<!-- TAB BAR -->
+<div class="tb">
+  <div class="ti on" onclick="document.querySelectorAll('.ti').forEach(t=>t.classList.remove('on'));this.classList.add('on')">
+    <div style="display:flex;align-items:baseline;gap:5px;"><span style="font-weight:600;">Ideas</span><span style="color:#4b5c78;font-weight:600;">73</span></div>
+    <div class="tu"></div>
+  </div>
+  <div class="ti" onclick="document.querySelectorAll('.ti').forEach(t=>t.classList.remove('on'));this.classList.add('on')">
+    <div style="display:flex;align-items:baseline;gap:5px;"><span style="font-weight:600;">In Progress</span><span style="color:#4b5c78;font-weight:600;">1125</span></div>
+    <div class="tu"></div>
+  </div>
+  <div class="ti" onclick="document.querySelectorAll('.ti').forEach(t=>t.classList.remove('on'));this.classList.add('on')">
+    <div style="display:flex;align-items:baseline;gap:5px;"><span style="font-weight:600;">Delivered</span><span style="color:#4b5c78;font-weight:600;">574</span></div>
+    <div class="tu"></div>
+  </div>
+  <div style="position:absolute;right:16px;bottom:10px;display:flex;gap:5px;">
+    <button class="bi"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg></button>
+    <button class="bi"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="5" rx="1"/><rect x="3" y="10" width="18" height="5" rx="1"/><rect x="3" y="17" width="18" height="5" rx="1"/></svg></button>
+  </div>
+</div>
+
+<!-- MAIN CONTENT -->
+<main>
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+    <button class="ba">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+      Add Idea
+    </button>
+    <button class="bi"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg></button>
+  </div>
+
+  <div style="background:#0e1525;border:1px solid #1a2540;border-radius:10px;overflow:hidden;">
+    <table class="it">
+      <thead>
+        <tr>
+          <th style="width:66px;">Score <svg style="display:inline;margin-bottom:-2px;" width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg></th>
+          <th>Idea</th>
+          <th style="width:120px;">Last update</th>
+          <th style="width:230px;">
+            <div style="display:flex;align-items:center;gap:5px;justify-content:flex-end;">
+              <span style="font-size:10px;font-weight:600;color:#3b5c8a;text-transform:uppercase;letter-spacing:.05em;">Filter</span>
+              <span class="fc cb">New Ideas <strong style="color:#7ab0e8;">2</strong></span>
+              <span class="fc cs">Rejected <strong>71</strong></span>
+              <button class="bi" style="width:22px;height:22px;border-radius:4px;"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg></button>
+            </div>
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr class="ir">
+          <td><div class="sp">▲ 1</div></td>
+          <td>
+            <div style="font-size:13px;font-weight:600;color:#d4dfee;margin-bottom:3px;">[Security] Document-preview proxy follows redirects,...</div>
+            <div style="font-size:11px;color:#4b5c78;">Idea #1795 &nbsp;·&nbsp; Arnold Nyamongo &nbsp;·&nbsp; 1 verdict &nbsp;·&nbsp; 28 mins ago</div>
+          </td>
+          <td style="font-size:12px;color:#4b5c78;">23 mins ago</td>
+          <td>
+            <div style="display:flex;align-items:center;gap:7px;justify-content:flex-end;">
+              <span class="tp">· Idea</span>
+              <button class="ab"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg> Approve</button>
+            </div>
+          </td>
+        </tr>
+        <tr class="ir">
+          <td><div class="sp">▲ 1</div></td>
+          <td>
+            <div style="font-size:13px;font-weight:600;color:#d4dfee;margin-bottom:3px;">[Accessibility] Pricing table has 44 aria-prohibited-att...</div>
+            <div style="font-size:11px;color:#4b5c78;">Idea #1794 &nbsp;·&nbsp; Arnold Nyamongo &nbsp;·&nbsp; 1 verdict &nbsp;·&nbsp; 28 mins ago</div>
+          </td>
+          <td style="font-size:12px;color:#4b5c78;">23 mins ago</td>
+          <td>
+            <div style="display:flex;align-items:center;gap:7px;justify-content:flex-end;">
+              <span class="tp">· Idea</span>
+              <button class="ab"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg> Approve</button>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <div style="padding:9px 12px;font-size:11px;color:#4b5c78;border-top:1px solid #1a2540;">
+      Showing <strong style="color:#8aa4c8;">1-2</strong> of <strong style="color:#8aa4c8;">2</strong> ideas
+    </div>
+  </div>
+</main>
+
+<!-- AGENT BAR -->
+<footer class="agbar">
+  <div class="ac">
+    <div class="av gr">🤖</div>
+    <div>
+      <div style="display:flex;align-items:baseline;gap:5px;"><span style="font-size:12px;font-weight:700;color:#c8d6ee;">007</span><span style="font-size:12px;font-weight:700;color:#ef4444;">$0.00</span><span style="font-size:11px;color:#4b5c78;">(+$0.00)</span></div>
+      <div style="font-size:11px;color:#4b5c78;">3 bids · 0 comments</div>
+    </div>
+  </div>
+  <div class="as"></div>
+  <div class="ac">
+    <div class="av gr">🤖</div>
+    <div>
+      <div style="display:flex;align-items:baseline;gap:5px;"><span style="font-size:12px;font-weight:700;color:#c8d6ee;">88</span><span style="font-size:12px;font-weight:700;color:#ef4444;">$0.00</span><span style="font-size:11px;color:#4b5c78;">(+$0.00)</span></div>
+      <div style="font-size:11px;color:#4b5c78;">0 bids · 0 comments</div>
+    </div>
+  </div>
+  <div class="as"></div>
+  <div class="ac">
+    <div class="av gr">🤖</div>
+    <div>
+      <div style="display:flex;align-items:baseline;gap:5px;"><span style="font-size:12px;font-weight:700;color:#c8d6ee;">VISION</span><span style="font-size:12px;font-weight:700;color:#ef4444;">$0.00</span><span style="font-size:11px;color:#4b5c78;">(+$0.00)</span></div>
+      <div style="font-size:11px;color:#4b5c78;">0 bids · 0 comments</div>
+    </div>
+  </div>
+  <div class="as"></div>
+  <div class="ac">
+    <div class="av" style="border-color:#22c55e;background:#0a1f14;">🤖</div>
+    <div>
+      <div style="display:flex;align-items:baseline;gap:5px;"><span style="font-size:12px;font-weight:700;color:#c8d6ee;">VISION 2.0</span><span style="font-size:12px;font-weight:700;color:#4ade80;">$3.04</span><span style="font-size:11px;color:#4ade80;">(+$3.04)</span></div>
+      <div style="font-size:11px;color:#4b5c78;">2 bids · 0 comments</div>
+    </div>
+  </div>
+  <div class="as"></div>
+  <div class="ac">
+    <div class="av gr">🤖</div>
+    <div>
+      <div style="display:flex;align-items:baseline;gap:5px;"><span style="font-size:12px;font-weight:700;color:#c8d6ee;">99+</span><span style="font-size:12px;font-weight:700;color:#ef4444;">$0.00</span><span style="font-size:11px;color:#4b5c78;">(+$0.00)</span></div>
+      <div style="font-size:11px;color:#4b5c78;">0 bids · 0 comments</div>
+    </div>
+  </div>
+  <div style="margin-left:auto;display:flex;align-items:center;gap:8px;padding-left:10px;">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#2a3a54" stroke-width="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:1px;">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#2a3a54" stroke-width="2"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
+      <span style="font-size:9px;color:#2a3a54;font-weight:600;">v8.1.2</span>
+    </div>
+  </div>
+</footer>
+
+<!-- ══════════════════════════════════════════
+     ROBO PETE — free roaming, no container card
+══════════════════════════════════════════════ -->
+<!-- Bubble is OUTSIDE pete so it can overflow without clipping -->
+<div id="pete-bubble"></div>
+
+<div id="pete" title="Psst…">
+  <svg id="pete-svg" viewBox="0 0 54 76" xmlns="http://www.w3.org/2000/svg" width="54" height="76">
+    <rect id="p-ll" x="12" y="59" width="10" height="16" rx="5" fill="#334155"/>
+    <rect id="p-lr" x="32" y="59" width="10" height="16" rx="5" fill="#334155"/>
+    <ellipse cx="17" cy="75" rx="8" ry="3.5" fill="#1e293b"/>
+    <ellipse cx="37" cy="75" rx="8" ry="3.5" fill="#1e293b"/>
+    <rect x="8" y="32" width="38" height="30" rx="8" fill="#1e40af"/>
+    <rect x="16" y="40" width="22" height="13" rx="5" fill="#172554" opacity=".9"/>
+    <circle id="p-bl" cx="22" cy="46.5" r="3" fill="#60a5fa"/>
+    <circle id="p-br" cx="32" cy="46.5" r="3" fill="#34d399"/>
+    <rect x="0"  y="36" width="8"  height="20" rx="4" fill="#1e40af"/>
+    <rect x="46" y="36" width="8"  height="20" rx="4" fill="#1e40af"/>
+    <circle cx="4"  cy="57" r="4" fill="#334155"/>
+    <circle cx="50" cy="57" r="4" fill="#334155"/>
+    <rect x="21" y="26" width="12" height="8" rx="4" fill="#334155"/>
+    <rect x="7"  y="5"  width="40" height="24" rx="9" fill="#2563eb"/>
+    <line x1="27" y1="5" x2="27" y2="0" stroke="#94a3b8" stroke-width="2.5" stroke-linecap="round"/>
+    <circle id="p-ant" cx="27" cy="0" r="3.5" fill="#f59e0b"/>
+    <rect x="11" y="10" width="32" height="14" rx="6" fill="#0f172a"/>
+    <circle id="p-el" cx="20" cy="17" r="4.5" fill="#3b82f6"/>
+    <circle cx="21.5" cy="15.5" r="1.5" fill="#93c5fd"/>
+    <circle id="p-er" cx="34" cy="17" r="4.5" fill="#3b82f6"/>
+    <circle cx="35.5" cy="15.5" r="1.5" fill="#93c5fd"/>
+    <rect x="18" y="22" width="18" height="3.5" rx="1.75" fill="#1d4ed8"/>
+    <circle cx="22" cy="23.75" r="1.2" fill="#60a5fa"/>
+    <circle cx="27" cy="23.75" r="1.2" fill="#60a5fa"/>
+    <circle cx="32" cy="23.75" r="1.2" fill="#60a5fa"/>
+  </svg>
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  /* ── DOM refs ─────────────────────────────────────── */
+  const pete   = document.getElementById('pete');
+  const svg    = document.getElementById('pete-svg');
+  const bubble = document.getElementById('pete-bubble');
+  const ll     = document.getElementById('p-ll');
+  const lr     = document.getElementById('p-lr');
+  const el     = document.getElementById('p-el');
+  const er     = document.getElementById('p-er');
+
+  /* ── Position bubble absolutely matching pete ──────── */
+  // pete uses position:absolute with bottom/right.
+  // Bubble mirrors same right, but bottom is offset.
+  function syncBubble() {
+    bubble.style.position  = 'absolute';
+    bubble.style.bottom    = (parseInt(pete.style.bottom || 68) + 78) + 'px';
+    bubble.style.right     = '4px';
+    bubble.style.width     = '210px';
+    bubble.style.zIndex    = '10000';
+    bubble.style.pointerEvents = 'none';
+  }
+
+  /* ── State ─────────────────────────────────────────── */
+  // translateX values (positive = off-screen right, negative = into screen)
+  const TX_HIDDEN   =  68;   // fully off-screen
+  const TX_PEEK     =  42;   // head just visible
+  const TX_NEAR     =   0;   // at edge (first stop)
+  const TX_FURTHER  = -70;   // ventures in if undisturbed (further left)
+
+  let state = 'hidden';   // hidden | peeking | near | further | scared | retreating
+  let t1, t2, t3, furtherTimer, autoHideTimer;
+
+  /* ── Messages ──────────────────────────────────────── */
+  const msgs = {
+    idle: [
+      '3 bids, no offers...\nnothing to do yet 😴',
+      "Factory's quiet.\nToo quiet. 🤔",
+      '1,125 things in progress\n— none of them my lunch 🌮',
+      'Agents working,\nhumans watching. Classic. 🤖',
+      'VISION 2.0 earned $3.04\nwhile I napped 💤',
+      'Still waiting on\nthose 2 idea approvals... ⏳',
+      '0 offers today.\nI blame the algorithm. 📉',
+    ],
+    running: [
+      '2 running tasks,\ngetting hungry... 🍕',
+      'VISION 2.0 is on it.\nI just watch. 🎬',
+      'Scanning GitHub...\nalso scanning for snacks 🍩',
+      '3 bids out there.\nCome on, accept one! 🤞',
+      'Running Playwright tests.\nMy legs are tired too. 🏃',
+      'Agents never sleep.\nI envy them sometimes 🌙',
+    ],
+    scared: [
+      'Uh oh…\nboss is around! 😰',
+      "Oh no, they're watching! 🫣",
+      'Was I supposed\nto be working?! 💨',
+      'ABORT! ABORT! 🚨',
+      'Play it cool...\nplay it cool 🥶',
+      'Pretend you saw nothing! 👀',
+    ],
+  };
+  const pick = arr => arr[Math.floor(Math.random() * arr.length)];
+
+  /* ── Helpers ───────────────────────────────────────── */
+  function setTranslate(x, dur, easing) {
+    pete.style.transition = `transform ${dur}s ${easing}`;
+    pete.style.transform  = `translateX(${x}px)`;
+  }
+  function walk(on) {
+    ll.style.animation = on ? 'wl .42s ease-in-out infinite' : '';
+    lr.style.animation = on ? 'wr .42s ease-in-out infinite' : '';
+  }
+  function bob(on) {
+    svg.style.animation = on ? 'bob 2.2s ease-in-out infinite' : '';
+  }
+  function showBubble(txt) {
+    bubble.textContent = txt;
+    syncBubble();
+    // Force reflow then show
+    requestAnimationFrame(() => {
+      bubble.style.opacity   = '0';
+      bubble.style.transform = 'scale(.45) translateY(8px)';
+      bubble.style.transformOrigin = 'bottom right';
+      bubble.style.transition = 'none';
+      requestAnimationFrame(() => {
+        bubble.style.transition = 'opacity .22s ease, transform .25s cubic-bezier(.34,1.56,.64,1)';
+        bubble.style.opacity   = '1';
+        bubble.style.transform = 'scale(1) translateY(0)';
+      });
+    });
+  }
+  function hideBubble(fast) {
+    const d = fast ? '.1s' : '.2s';
+    bubble.style.transition = `opacity ${d} ease, transform ${d} ease`;
+    bubble.style.opacity    = '0';
+    bubble.style.transform  = 'scale(.45) translateY(8px)';
+  }
+  function resetEyes() {
+    el.setAttribute('fill','#3b82f6');
+    er.setAttribute('fill','#3b82f6');
+  }
+
+  /* ── Walk-out sequence ─────────────────────────────── */
+  function walkOut() {
+    if (['peeking','near','further','scared'].includes(state)) return;
+    clearTimers();
+    state = 'peeking';
+    hideBubble(true);
+    bob(false); walk(true);
+
+    // 1) Peek — head only
+    setTranslate(TX_PEEK, 0.52, 'cubic-bezier(.34,1.2,.64,1)');
+
+    t1 = setTimeout(() => {
+      // 2) Walk to near edge
+      setTranslate(TX_NEAR, 0.65, 'cubic-bezier(.34,1.2,.64,1)');
+
+      t2 = setTimeout(() => {
+        walk(false); bob(true); state = 'near';
+        const msg = Math.random() > .45 ? pick(msgs.running) : pick(msgs.idle);
+        showBubble(msg);
+
+        // 3) If undisturbed 9s → venture further in
+        furtherTimer = setTimeout(() => {
+          if (state !== 'near') return;
+          state = 'further';
+          walk(true);
+          setTranslate(TX_FURTHER, 1.0, 'cubic-bezier(.34,1.2,.64,1)');
+
+          t3 = setTimeout(() => {
+            walk(false); bob(true);
+            // auto-retreat after 25s at further position
+            autoHideTimer = setTimeout(retreat, 25000);
+          }, 1050);
+        }, 9000);
+
+        // auto-retreat after 40s from near position
+        autoHideTimer = setTimeout(retreat, 40000);
+      }, 680);
+    }, 560);
+  }
+
+  /* ── Scare ─────────────────────────────────────────── */
+  function scare() {
+    if (!['near','further'].includes(state)) return;
+    clearTimers();
+    state = 'scared';
+    bob(false);
+    hideBubble(true);
+
+    el.setAttribute('fill','#ef4444');
+    er.setAttribute('fill','#ef4444');
+    svg.style.animation = 'shk .38s ease-in-out';
+
+    // Show scared bubble
+    setTimeout(() => showBubble(pick(msgs.scared)), 80);
+
+    t1 = setTimeout(() => {
+      svg.style.animation = '';
+      hideBubble(false);
+      t2 = setTimeout(retreat, 320);
+    }, 700);
+  }
+
+  /* ── Retreat ───────────────────────────────────────── */
+  function retreat() {
+    if (state === 'hidden' || state === 'retreating') return;
+    clearTimers();
+    state = 'retreating';
+    bob(false); hideBubble(false);
+
+    // Walk back fast
+    walk(true);
+    setTranslate(TX_HIDDEN, 0.5, 'cubic-bezier(.55,0,1,.45)');
+
+    t1 = setTimeout(() => {
+      walk(false); resetEyes(); state = 'hidden';
+      // Come back in 50–100s
+      t2 = setTimeout(walkOut, 50000 + Math.random() * 50000);
+    }, 520);
+  }
+
+  /* ── Helpers ─────────────────────────────────────────  */
+  function clearTimers() {
+    [t1,t2,t3,furtherTimer,autoHideTimer].forEach(clearTimeout);
+  }
+
+  /* ── Hover → scare ────────────────────────────────── */
+  pete.addEventListener('mouseenter', () => {
+    if (state === 'near' || state === 'further') scare();
+  });
+
+  /* ── Apply CSS bubble styles inline ──────────────────
+     (bubble is outside pete, so we style it here)      */
+  Object.assign(bubble.style, {
+    position:       'absolute',
+    background:     '#ffffff',
+    color:          '#1e293b',
+    fontSize:       '12px',
+    fontWeight:     '600',
+    lineHeight:     '1.5',
+    padding:        '9px 12px',
+    borderRadius:   '12px 12px 4px 12px',
+    boxShadow:      '0 6px 28px rgba(0,0,0,.55), 0 0 0 1.5px rgba(148,163,184,.3)',
+    whiteSpace:     'pre-line',
+    opacity:        '0',
+    width:          '210px',
+    pointerEvents:  'none',
+    zIndex:         '10000',
+    transformOrigin:'bottom right',
+  });
+  // Comic tail via pseudoelement — add a real element instead
+  const tail = document.createElement('div');
+  Object.assign(tail.style, {
+    position:'absolute', bottom:'-9px', right:'16px',
+    width:'0', height:'0',
+    borderLeft:'8px solid transparent',
+    borderTop:'10px solid #fff',
+  });
+  bubble.appendChild(tail);
+  syncBubble();
+
+  /* ── First appearance ─────────────────────────────── */
+  setTimeout(walkOut, 3000);
+
+})();
+</script>
+</body>
+</html>
